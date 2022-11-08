@@ -1,19 +1,27 @@
-
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-
-
 public class App {
     private final Lock lock = new ReentrantLock();
     int count = 1;
-    private Condition conditionMet = lock.newCondition();
     boolean revers = false;
-    public static void  main(String[] args) throws InterruptedException {
-       new App().go();
+    String messege1 = "Поток 1: ";
+    String messege2 = "Поток 2: ";
+    String messege = "Поток 1: ";
+    private Condition conditionMet = lock.newCondition();
+    private String lastThread = "Поток 1: ";
+    private boolean start = false;
+
+    public static void main(String[] args) throws InterruptedException {
+
+
+        new App().go();
+
 
     }
 
@@ -26,36 +34,27 @@ public class App {
         thread2.setName("Поток 2: ");
 
         thread1.start();
-        sleep();
         thread2.start();
 
-        thread1.join();
-        thread2.join();
-
-
-
-    }
-
-
-
-
-
-    private static void sleep() {
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     public void counter(int count) {
 
-        while(true) {
-            run(count);
-            if(count == 10) revers = true;
-            if(count == 0) revers = false;
-            if(!revers)count = count+1;
-            if(revers)count = count-1;
+        while (true) {
+            if (Thread.currentThread().getName().equals(messege)) {
+                run(count);
+                if (count == 10) revers = true;
+                if (count == 0) revers = false;
+                if (!revers) count = count + 1;
+                if (revers) count = count - 1;
+                if (Thread.currentThread().getName().equals("Поток 1: ")) {
+                    messege = messege2;
+                }
+                if (Thread.currentThread().getName().equals("Поток 2: ")) {
+                    messege = messege1;
+                }
+
+            }
         }
     }
 
@@ -63,16 +62,19 @@ public class App {
 
         lock.lock();
         try {
-            conditionMet.await(2, TimeUnit.SECONDS);
-            System.out.println(Thread.currentThread().getName() + " " + count );
+
+            conditionMet.await(1, TimeUnit.SECONDS);
+            System.out.println("  " + Thread.currentThread().getName() + " " + count);
             conditionMet.signal();
-            sleep();
+
 
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.out.println(e);
         } finally {
             lock.unlock();
         }
+
+
     }
 
 
